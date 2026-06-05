@@ -31,13 +31,17 @@ $ docker-compose up -d
 
 2. See the results:
 
+<img alt="Image" src="https://github.com/yurimarx/fhir-assistant/blob/master/picture2.png?raw=true"/>
+
 
 3. Go to NL to FHIR Query Explorer and Ask a question about the patient population (e.g: List the patients with diabetes and gender male):
 
+<img alt="Image" src="https://github.com/yurimarx/fhir-assistant/blob/master/picture1.png?raw=true"/>
+
+
 4. See the results:
 
-
-
+<img alt="Image" src="https://github.com/yurimarx/fhir-assistant/blob/master/picture4.png?raw=true"/>
 
 
 ## Patient data
