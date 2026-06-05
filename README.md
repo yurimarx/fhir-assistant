@@ -27,6 +27,7 @@ $ docker-compose up -d
 ## Agent UI
 1. Go to Smart Patient Summary tab type Patient ID (1 to 10) and Role (e.g. ED Doctor) and click Generate Smart Summary button.
 
+<img alt="Image" src="https://github.com/yurimarx/fhir-assistant/blob/master/picture1.png?raw=true"/>
 
 2. See the results:
 
