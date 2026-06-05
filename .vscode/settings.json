@@ -14,6 +14,7 @@
         "internalPort": 52773
       },
       "links": {
+        "FHIR Assitant": "http://localhost:8501",
         "FHIR UI Portal": "http://localhost:${port}/fhir/portal/patientlist.html",
         "FHIR UI Demo": "http://localhost:${port}/fhirUI/FHIRAppDemo.html",
         "FHIR Swagger": "http://localhost:${port}/swagger-ui/index.html"

@@ -1,38 +1,21 @@
- [![Gitter](https://img.shields.io/badge/Available%20on-Intersystems%20Open%20Exchange-00b2a9.svg)](https://openexchange.intersystems.com/package/iris-fhir-template)
- [![Quality Gate Status](https://community.objectscriptquality.com/api/project_badges/measure?project=intersystems_iris_community%2Firis-fhir-template&metric=alert_status)](https://community.objectscriptquality.com/dashboard?id=intersystems_iris_community%2Firis-fhir-template)
- [![Reliability Rating](https://community.objectscriptquality.com/api/project_badges/measure?project=intersystems_iris_community%2Firis-fhir-template&metric=reliability_rating)](https://community.objectscriptquality.com/dashboard?id=intersystems_iris_community%2Firis-fhir-template)
-# iris-fhirserver-template
-This is the base template for using InterSystems IRIS for Health Community Edition as a FHIR Server
-
-It setups a FHIR SERVER, imports the test data, demoes REST API usage with a simple web page.
+ [![Gitter](https://img.shields.io/badge/Available%20on-Intersystems%20Open%20Exchange-00b2a9.svg)](https://openexchange.intersystems.com/package/fhir-assistant)
+ 
+# iris-assistant
+Clinical summary and natural text agents for FHIR API using Ollama, the LLM lhama3, LangChain, and InterSystems IRIS FHIR Server to:
+- Tab 1. Generate clinical summaries from the perspective of the clinician, caregiver, patient, and family member based on the patient ID.
+- Tab 2. Transform textual questions into calls to the IRIS FHIR Server API and then analyze the results with the LLM.
 
 ## Prerequisites
 Make sure you have [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) and [Docker desktop](https://www.docker.com/products/docker-desktop) installed.
 
 ## Installation
 
-### IPM
-
-Open IRIS for Health installation with IPM client installed. Call in any namespace:
-
-```
-USER>zpm "install fhir-server"
-```
-
-This will install FHIR server in FHIRSERVER namespace.
-
-Or call the following for installing programmatically:
-```
-set sc=$zpm("install fhir-server")
-```
-
-
 ### Docker (e.g. for dev purposes)
 
 Clone/git pull the repo into any local directory
 
 ```
-$ git clone https://github.com/intersystems-community/iris-fhir-template.git
+$ git clone https://github.com/yurimarx/fhir-assistant.git
 ```
 
 Open the terminal in this directory and run:
@@ -40,6 +23,21 @@ Open the terminal in this directory and run:
 ```
 $ docker-compose up -d
 ```
+
+## Agent UI
+1. Go to Smart Patient Summary tab type Patient ID (1 to 10) and Role (e.g. ED Doctor) and click Generate Smart Summary button.
+
+
+2. See the results:
+
+
+3. Go to NL to FHIR Query Explorer and Ask a question about the patient population (e.g: List the patients with diabetes and gender male):
+
+4. See the results:
+
+
+
+
 
 ## Patient data
 The template goes with 5 preloaded patents in [/data/fhir](https://github.com/intersystems-community/iris-fhir-server-template/tree/master/data/fhir) folder which are being loaded during [docker build](https://github.com/intersystems-community/iris-fhir-server-template/blob/8bd2932b34468f14530a53d3ab5125f9077696bb/iris.script#L26)
@@ -142,4 +140,4 @@ and start the container with:
 docker-compose up -d
 ```
 
-This and other helpful commands you can find in [dev.md](https://github.com/intersystems-community/iris-fhir-template/blob/cd7e0111ff94dcac82377a2aa7df0ce5e0571b5a/dev.md)
+This and other helpful commands you can find in [dev.md](https://github.com/intersystems-community/fhir-assistant/blob/cd7e0111ff94dcac82377a2aa7df0ce5e0571b5a/dev.md)

@@ -39,8 +39,6 @@ kill ^ISCLOG
 
 set ^%ISCLOG=3
 
-
-
 http://localhost:32783/fhirUI/irisfhir.json
 http://localhost:32783/fhirUI/irisfhir_swagger.json
 

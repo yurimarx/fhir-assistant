@@ -20,3 +20,49 @@ services:
       - ./data:/data
       - ./fhirUI:/usr/irissys/csp/fhirUI
       - ./:/home/irisowner/irisdev
+    networks:
+      - fhir-net
+
+  ollama:
+    image: ollama/ollama
+    container_name: ollama
+    restart: always
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+    environment:
+      - OLLAMA_KEEP_ALIVE="24h"
+      - OLLAMA_MAX_LOADED_MODELS=1
+    networks:
+      - fhir-net
+    entrypoint: /bin/sh
+    command: -c "ollama serve & sleep 5 && ollama pull llama3 && wait"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  streamlit:
+    build: ./streamlit
+    container_name: streamlit
+    restart: always
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./streamlit:/app
+    depends_on:
+      - iris
+      - ollama
+    networks:
+      - fhir-net
+
+volumes:
+  ollama:
+
+networks:
+  fhir-net:
+    driver: bridge
