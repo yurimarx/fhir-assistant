@@ -22,6 +22,8 @@ services:
       - ./:/home/irisowner/irisdev
     networks:
       - fhir-net
+    depends_on:
+      - ollama
 
   ollama:
     image: ollama/ollama

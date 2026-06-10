@@ -1,8 +1,15 @@
 ARG IMAGE=intersystemsdc/irishealth-community:latest
 FROM $IMAGE AS builder
 
+ENV PYTHONUTF8=1
+
 WORKDIR /home/irisowner/irisdev
 #RUN chown ${ISC_PACKAGE_MGRUSER}:${ISC_PACKAGE_IRISGROUP} /opt/irisapp
+
+USER root
+RUN /usr/irissys/bin/irispython -m pip install --target /usr/irissys/mgr/python --no-cache-dir intersystems-irispython requests && \
+    chown -R ${ISC_PACKAGE_MGRUSER}:${ISC_PACKAGE_IRISGROUP} /usr/irissys/mgr/python
+USER ${ISC_PACKAGE_MGRUSER}
 
 # copy all the source into container and run iris. also run a initial script
 RUN --mount=type=bind,src=.,dst=. \
@@ -12,11 +19,9 @@ RUN --mount=type=bind,src=.,dst=. \
     iris stop IRIS quietly
 
 
-RUN old=http://localhost:52773/crud/_spec && \
-    new=/fhirUI/irisfhir_swagger.json && \
-	sed -i "s|$old|$new|g" /usr/irissys/csp/swagger-ui/index.html
-
 FROM $IMAGE AS final
+
+ENV PYTHONUTF8=1
 
 ADD --chown=${ISC_PACKAGE_MGRUSER}:${ISC_PACKAGE_IRISGROUP} https://github.com/grongierisc/iris-docker-multi-stage-script/releases/latest/download/copy-data.py /irisdev/app/copy-data.py
 

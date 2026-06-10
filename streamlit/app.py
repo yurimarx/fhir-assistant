@@ -1,16 +1,18 @@
 import streamlit as st
 import requests
 import json
+import re
+import pandas as pd
 from langchain_community.llms import Ollama
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
 st.set_page_config(page_title="Smart Patient Summary Generator", layout="wide")
 
-IRIS_FHIR_URL = st.sidebar.text_input("IRIS FHIR Endpoint Local", "http://iris:52773/fhir/r4")
+IRIS_FHIR_URL = st.sidebar.text_input("IRIS FHIR Endpoint Local", "http://localhost:32783/fhir/r4")
 IRIS_USER = st.sidebar.text_input("Username", "SuperUser")
 IRIS_PASSWORD = st.sidebar.text_input("Password", "SYS", type="password")
-OLLAMA_URL = st.sidebar.text_input("Ollama Endpoint", "http://ollama:11434")
+OLLAMA_URL = st.sidebar.text_input("Ollama Endpoint", "http://localhost:11434")
 MODEL_NAME = st.sidebar.selectbox("LLM Model", ["llama3"])
 
 def fetch_patient_fhir_bundle(patient_id: str) -> dict:
@@ -85,7 +87,7 @@ PERSONA_PROMPTS = {
 
 st.title("🏥 InterSystems IRIS Health Assistant")
 
-tab1, tab2 = st.tabs(["Smart Patient Summary", "NL to FHIR Query Explorer"])
+tab1, tab2, tab3 = st.tabs(["Smart Patient Summary", "NL to FHIR Query Explorer", "Observation Charts"])
 
 with tab1:
     st.subheader("Smart Patient Summary Generator")
@@ -235,3 +237,97 @@ with tab2:
                     
         except Exception as e:
             st.error(f"Error processing the request: {e}")
+
+with tab3:
+    st.subheader("Patient Observation Charts")
+    st.markdown("All observations for a patient with charts.")
+    
+    obs_patient_id = st.text_input("Patient ID", "1", key="obs_patient_id")
+    
+    if st.button("Generate Charts"):
+        with st.spinner("Fetching observations from FHIR Server..."):
+            url = f"{IRIS_FHIR_URL}/Observation?patient={obs_patient_id}"
+            auth = (IRIS_USER, IRIS_PASSWORD)
+            headers = {"Accept": "application/fhir+json"}
+            
+            try:
+                response = requests.get(url, headers=headers, auth=auth, timeout=10)
+                if response.status_code == 200:
+                    obs_data = response.json()
+                    total_obs = obs_data.get("total", len(obs_data.get("entry", [])))
+                    
+                    if total_obs == 0:
+                        st.warning("No observations found for this patient.")
+                    else:
+                        st.success(f"Found {total_obs} observation records. Analyzing with LLM...")
+                        
+                        llm = Ollama(base_url=OLLAMA_URL, model=MODEL_NAME)
+                        chart_prompt = PromptTemplate.from_template(
+                            """You are an expert data scientist. I will provide a FHIR Observation bundle.
+                            Your task is to extract Clinical observation measurements (e.g., vital signs, lab results) from the data into a Pandas DataFrame.
+                            The FHIR data is already available in the execution environment as a Python dictionary named `obs_data`.
+                            Use `pandas` (as `pd`) which is also available in the environment.
+                            You must write the Python code to:
+                            1. Iterate through the list `obs_data.get('entry', [])`. Ensure you iterate over the list and NOT the dictionary keys.
+                            2. Filter for Clinical observation measurements (e.g., having 'valueQuantity' in the resource).
+                            3. Extract the observation name, date ('effectiveDateTime'), and numeric value ('valueQuantity.value'). Always verify the object is a dictionary using `isinstance(obj, dict)` before calling `.get()` to avoid KeyErrors.
+                            4. Skip entries that do not have an 'effectiveDateTime' or a numeric value.
+                            5. Create a pandas DataFrame named `df` with EXACTLY these columns: 'Observation', 'Date', and 'Value'. Do NOT use `df.append()` as it is removed from pandas. Accumulate data in a standard Python list of dictionaries and create the DataFrame at the end.
+                            6. Convert the 'Date' column to datetime.
+                            
+                            Do NOT generate an intermediate JSON. Write the Python code that processes `obs_data` and generates the charts directly.
+                            CRITICAL: Do NOT define, initialize, or mock the `obs_data` variable. It is already provided in the environment. Do NOT write `obs_data = ` anywhere in your code.
+                            CRITICAL: Return ONLY valid Python code. Do not include markdown formatting (like ```python), backticks, import statements, or any conversational text.
+                            CRITICAL: Provide the FULL working script. Do NOT use placeholders like `...`, `pass`, or `Ellipsis`.
+                            CRITICAL: Do NOT generate charts or use Streamlit. ONLY create the DataFrame named `df`.
+                            
+                            FHIR Data sample (to understand the structure):
+                            {fhir_data}
+                            """
+                        )
+                        chain = chart_prompt | llm | StrOutputParser()
+                        
+                        # Passamos apenas uma pequena amostra para o LLM não estourar o limite de tokens
+                        sample_data = {"entry": obs_data.get("entry", [])[:2]}
+                        
+                        with st.spinner(f"Generating and executing chart code using {MODEL_NAME}..."):
+                            result = chain.invoke({"fhir_data": json.dumps(sample_data, indent=2)})
+                            
+                            try:
+                                clean_code = result
+                                code_match = re.search(r'```[ \t]*\w*\n?(.*?)```', result, re.DOTALL)
+                                if code_match:
+                                    clean_code = code_match.group(1).strip()
+                                else:
+                                    open_match = re.search(r'```[ \t]*\w*\n?(.*)', result, re.DOTALL)
+                                    if open_match:
+                                        clean_code = open_match.group(1).strip()
+                                    
+                                # Remove assignment to obs_data if the LLM still tries to mock it
+                                clean_code = re.sub(r'^[ \t]*obs_data\s*=.*$', '', clean_code, flags=re.MULTILINE)
+                                
+                                namespace = {"pd": pd, "obs_data": obs_data}
+                                exec(clean_code, namespace)
+                                
+                                df = namespace.get("df")
+                                if df is not None and isinstance(df, pd.DataFrame) and not df.empty:
+                                    for obs_name, group_df in df.groupby("Observation"):
+                                        st.subheader(obs_name)
+                                        group_df = group_df.sort_values("Date")
+                                        chart_data = group_df.set_index("Date")["Value"]
+                                        st.line_chart(chart_data)
+                                else:
+                                    st.warning("The model did not generate a valid DataFrame containing the observations.")
+                                    with st.expander("Raw LLM Code Output"):
+                                        st.code(clean_code, language="python")
+                            except Exception as exec_error:
+                                st.error(f"Error executing LLM generated code: {exec_error}")
+                                with st.expander("Raw LLM Code Output"):
+                                    st.code(result, language="python")
+                                    
+                else:
+                    st.error(f"FHIR Server returned status code {response.status_code}")
+                    st.text(response.text)
+                    
+            except Exception as e:
+                st.error(f"Error processing the request: {e}")

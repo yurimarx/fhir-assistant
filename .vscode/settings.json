@@ -4,7 +4,7 @@
         "Dockerfile*": "dockerfile",
         "iris.script": "objectscript"
       },
-    "objectscript.conn" :{
+    "objectscript.conn": {
       "ns": "FHIRSERVER",
       "active": true,
       "username": "_SYSTEM",
