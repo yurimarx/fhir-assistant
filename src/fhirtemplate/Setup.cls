@@ -44,7 +44,7 @@ ClassMethod SetupFHIRServer(ns = "FHIRSERVER", appKey = "/fhir/r4", testLoad = 1
         If 'st {
             Write $SYSTEM.Status.GetErrorText(st) 
         } Else {
-            Do ..VectorizePatients()
+            // Do ..VectorizePatients()
         }
     }
 
