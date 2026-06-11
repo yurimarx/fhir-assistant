@@ -9,10 +9,10 @@ from langchain_core.output_parsers import StrOutputParser
 
 st.set_page_config(page_title="Smart Patient Summary Generator", layout="wide")
 
-IRIS_FHIR_URL = st.sidebar.text_input("IRIS FHIR Endpoint Local", "http://localhost:32783/fhir/r4")
+IRIS_FHIR_URL = st.sidebar.text_input("IRIS FHIR Endpoint Local", "http://iris:52773/fhir/r4")
 IRIS_USER = st.sidebar.text_input("Username", "SuperUser")
 IRIS_PASSWORD = st.sidebar.text_input("Password", "SYS", type="password")
-OLLAMA_URL = st.sidebar.text_input("Ollama Endpoint", "http://localhost:11434")
+OLLAMA_URL = st.sidebar.text_input("Ollama Endpoint", "http://ollama:11434")
 MODEL_NAME = st.sidebar.selectbox("LLM Model", ["llama3"])
 
 def fetch_patient_fhir_bundle(patient_id: str) -> dict:
