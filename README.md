@@ -4,6 +4,7 @@
 Clinical summary and natural text agents for FHIR API using Ollama, the LLM lhama3, LangChain, and InterSystems IRIS FHIR Server to:
 - Tab 1. Generate clinical summaries from the perspective of the clinician, caregiver, patient, and family member based on the patient ID.
 - Tab 2. Transform textual questions into calls to the IRIS FHIR Server API and then analyze the results with the LLM.
+- Tab 3. Generate AI charts from Patient Observations data.
 
 ## Prerequisites
 Make sure you have [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) and [Docker desktop](https://www.docker.com/products/docker-desktop) installed.
@@ -19,6 +20,11 @@ $ git clone https://github.com/yurimarx/fhir-assistant.git
 ```
 
 Open the terminal in this directory and run:
+
+```
+$ docker-compose build
+```
+
 
 ```
 $ docker-compose up -d
